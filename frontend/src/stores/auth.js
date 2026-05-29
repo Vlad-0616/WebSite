@@ -19,7 +19,15 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await apiClient.post('/api/auth/login', credentials)
       const { user: userData, access_token, refresh_token } = response.data
       
-      user.value = userData
+      user.value = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        phone: userData.phone || '',
+        role: userData.role,
+        created_at: userData.created_at,
+        company_name: userData.company_name || userData.name || 'Перевозчик' // Добавляем company_name если нет
+      }
       accessToken.value = access_token
       refreshToken.value = refresh_token
       
@@ -28,6 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
       
       return { success: true }
     } catch (error) {
+      console.error('Login error:', error)
       return { 
         success: false, 
         error: error.response?.data?.message || 'Ошибка входа' 
@@ -40,7 +49,15 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await apiClient.post('/api/auth/register', data)
       const { user: userData, access_token, refresh_token } = response.data
       
-      user.value = userData
+      user.value = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        phone: userData.phone || '',
+        role: userData.role,
+        created_at: userData.created_at,
+        company_name: userData.company_name || userData.name || (userData.role === 'carrier' ? 'Перевозчик' : 'Заказчик')
+      }
       accessToken.value = access_token
       refreshToken.value = refresh_token
       
@@ -49,6 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
       
       return { success: true }
     } catch (error) {
+      console.error('Register error:', error)
       return { 
         success: false, 
         error: error.response?.data?.message || 'Ошибка регистрации' 
@@ -85,7 +103,16 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const response = await apiClient.get('/api/auth/me')
-      user.value = response.data
+       user.value = {
+        id: response.data.id,
+        email: response.data.email,
+        name: response.data.name,
+        phone: response.data.phone || '',
+        role: response.data.role,
+        created_at: response.data.created_at,
+        company_name: response.data.company_name || response.data.name || 
+          (response.data.role === 'carrier' ? 'Перевозчик' : 'Заказчик')
+      }
     } catch (error) {
       console.error('Failed to fetch user:', error)
       if (error.response?.status === 401) {
