@@ -21,13 +21,6 @@
           </router-link>
           
           <template v-if="authStore.isAuthenticated">
-            <router-link 
-              to="/favorites" 
-              class="text-white hover:text-blue-400 transition-colors"
-            >
-              Избранное
-            </router-link>
-            
             <div class="relative group">
               <button class="text-white hover:text-blue-400 transition-colors flex items-center gap-2">
                 <span>{{ authStore.user?.company_name || 'Профиль' }}</span>
@@ -38,11 +31,18 @@
               
               <div class="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-lg rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                 <router-link 
-                  :to="authStore.isCarrier ? '/profile/transporter/bids' : '/profile'"
+                  :to="authStore.isCarrier ? '/profile/transporter/orders' : '/profile'"
                   class="block px-4 py-2 text-gray-800 hover:bg-blue-50"
                 >
                   Личный кабинет
                 </router-link>
+                <!-- <router-link 
+                  v-if="authStore.isCarrier"
+                  to="/profile/transporter/bids"
+                  class="block px-4 py-2 text-gray-800 hover:bg-blue-50"
+                >
+                  Мои ставки
+                </router-link> -->
                 <router-link 
                   v-if="authStore.isAdmin"
                   to="/admin"
