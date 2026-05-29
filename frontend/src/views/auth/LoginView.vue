@@ -3,24 +3,26 @@
     <div class="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
       <h1 class="text-3xl font-bold text-white text-center mb-8">Вход</h1>
       
-      <form @submit.prevent="handleLogin" class="space-y-6">
+      <form @submit.prevent="handleLogin" autocomplete="off" class="space-y-6">
         <div>
           <label class="block text-gray-300 mb-2">Email</label>
-          <input 
+          <input
             v-model="form.email"
-            type="email" 
+            type="email"
             required
+            autocomplete="off"
             class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="example@mail.com"
           />
         </div>
-        
+
         <div>
           <label class="block text-gray-300 mb-2">Пароль</label>
-          <input 
+          <input
             v-model="form.password"
-            type="password" 
+            type="password"
             required
+            autocomplete="new-password"
             class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Введите пароль"
           />
@@ -89,6 +91,7 @@ const handleLogin = async () => {
   loading.value = false
   
   if (result.success) {
+    form.value = { email: '', password: '', remember_me: false }
     const redirect = route.query.redirect || '/'
     router.push(redirect)
   } else {
