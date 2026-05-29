@@ -8,24 +8,28 @@
         <router-link 
           to="/profile/transporter/bids"
           class="px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+          active-class="bg-white/20"
         >
           Мои ставки
         </router-link>
         <router-link 
           to="/profile/transporter/orders"
           class="px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+          active-class="bg-white/20"
         >
           Мои заказы
         </router-link>
         <router-link 
           to="/profile/transporter/trucks"
           class="px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+          active-class="bg-white/20"
         >
           Управление транспортом
         </router-link>
         <router-link 
           to="/profile/transporter/settings"
           class="px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+          active-class="bg-white/20"
         >
           Настройки
         </router-link>
