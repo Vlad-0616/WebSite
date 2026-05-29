@@ -1,17 +1,22 @@
 import apiClient from './client'
 
 export const trucksAPI = {
-  // Получить список транспорта
+  // Получить список доступного транспорта (публичный)
   getAll(params = {}) {
     return apiClient.get('/api/trucks', { params })
   },
 
-  // Получить мой транспорт
+  // Получить мой транспорт (только для перевозчиков)
   getMyTrucks() {
-    return apiClient.get('/api/trucks', { params: { carrier_id: 'me' } })
+    return apiClient.get('/api/trucks/my')
   },
 
-  // Добавить транспорт
+  // Получить детали транспорта
+  getById(id) {
+    return apiClient.get(`/api/trucks/${id}`)
+  },
+
+  // Добавить транспорт 
   create(data) {
     return apiClient.post('/api/trucks', data)
   },
@@ -29,13 +34,6 @@ export const trucksAPI = {
   // Изменить статус доступности
   updateAvailability(id, available) {
     return apiClient.patch(`/api/trucks/${id}/availability`, { available })
-  }
-}
-
-export const truckTypesAPI = {
-  // Получить справочник типов транспорта
-  getAll() {
-    return apiClient.get('/api/truck-types')
   }
 }
 
