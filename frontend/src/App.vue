@@ -23,19 +23,11 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
 import DefaultLayout from './layouts/DefaultLayout.vue'
-import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 
-const authStore = useAuthStore()
 const appStore = useAppStore()
 
-onMounted(async () => {
-  if (authStore.accessToken) {
-    await authStore.fetchUser()
-  }
-})
 </script>
 
 <style>
