@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 
+// Импортируем OrdersListView статически, чтобы избежать проблем с динамической загрузкой
+import OrdersListView from '../views/orders/OrdersListView.vue'
+
 const routes = [
   {
     path: '/',
@@ -33,7 +36,13 @@ const routes = [
       {
         path: '',
         name: 'orders',
-        component: () => import('../views/orders/OrdersListView.vue')
+        component: OrdersListView  // Используем статический импорт
+      },
+      {
+        path: 'create',
+        name: 'create-order',
+        meta: { requiresAuth: true },
+        component: () => import('../views/orders/CreateOrderView.vue')
       },
       {
         path: ':id',
@@ -50,55 +59,50 @@ const routes = [
   {
     path: '/profile',
     meta: { requiresAuth: true },
+    component: () => import('../views/profile/ProfileView.vue'),
     children: [
       {
-        path: '',
-        name: 'profile',
-        component: () => import('../views/profile/ProfileView.vue')
+        path: 'my-orders',
+        name: 'my-orders',
+        component: () => import('../views/profile/MyOrdersView.vue')
       },
       {
-        path: 'transporter',
-        children: [
-          {
-            path: 'bids',
-            name: 'transporter-bids',
-            component: () => import('../views/profile/TransporterBidsView.vue')
-          },
-          {
-            path: 'orders',
-            name: 'transporter-orders',
-            component: () => import('../views/profile/TransporterOrdersView.vue')
-          },
-          {
-            path: 'trucks',
-            name: 'transporter-trucks',
-            component: () => import('../views/profile/TransporterTrucksView.vue')
-          },
-          {
-            path: 'settings',
-            name: 'transporter-settings',
-            component: () => import('../views/profile/TransporterSettingsView.vue')
-          }
-        ]
+        path: 'settings',
+        name: 'profile-settings',
+        component: () => import('../views/profile/SettingsView.vue')
+      },
+      {
+        path: 'transporter/orders',
+        name: 'transporter-orders',
+        component: () => import('../views/profile/TransporterOrdersView.vue')
+      },
+      {
+        path: 'transporter/trucks',
+        name: 'transporter-trucks',
+        component: () => import('../views/profile/TransporterTrucksView.vue')
+      },
+      {
+        path: 'transporter/settings',
+        name: 'transporter-settings',
+        component: () => import('../views/profile/TransporterSettingsView.vue')
       }
     ]
-  },
-  {
-    path: '/favorites',
-    name: 'favorites',
-    meta: { requiresAuth: true },
-    component: () => import('../views/favorites/FavoritesView.vue')
   },
   {
     path: '/admin',
     name: 'admin',
     meta: { requiresAuth: true, requiresAdmin: true },
     component: () => import('../views/admin/AdminView.vue')
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('../views/NotFoundView.vue')
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
@@ -110,17 +114,21 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from) => {
-  // Динамический импорт чтобы избежать ошибки при инициализации
   const { useAuthStore } = await import('../stores/auth')
   const authStore = useAuthStore()
-  
+
+  if (to.path.startsWith('/auth') && authStore.isAuthenticated) {
+    return { name: 'home' }
+  }
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
+  
   if (to.meta.requiresAdmin && !authStore.isAdmin) {
     return { name: 'home' }
   }
-  // Возвращаем true для продолжения навигации
+  
   return true
 })
 
