@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- Герой-секция -->
     <section class="container mx-auto px-4 py-20 text-center">
       <h1 class="text-5xl md:text-6xl font-bold text-white mb-6">
         Биржа грузоперевозок
@@ -72,6 +71,7 @@
     <section class="container mx-auto px-4 py-12">
       <h2 class="text-3xl font-bold text-white mb-8">Последние заказы</h2>
       
+      <!-- Скелетоны загрузки -->
       <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div v-for="i in 6" :key="i" class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 animate-pulse">
           <div class="h-6 bg-white/20 rounded mb-4 w-3/4"></div>
@@ -81,33 +81,59 @@
         </div>
       </div>
 
-      <div v-else-if="orders.length === 0" class="text-center py-12">
+      <!-- Нет заказов -->
+      <div v-else-if="orders.length === 0" class="text-center py-12 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20">
         <p class="text-gray-400 text-lg mb-4">Нет активных заказов</p>
         <router-link 
           v-if="authStore.isAuthenticated"
-          to="/orders" 
+          to="/orders/create" 
           class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors"
         >
           Разместить заказ
         </router-link>
       </div>
 
+      <!-- Список заказов -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <router-link 
           v-for="order in orders" 
           :key="order.id"
           :to="`/orders/${order.id}`"
-          class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-colors"
+          class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-colors block"
         >
-          <h3 class="text-xl font-semibold text-white mb-2">
-            {{ order.pickup_address }} → {{ order.delivery_address }}
-          </h3>
-          <div class="text-gray-300 text-sm space-y-1 mb-4">
-            <p>Вес: {{ order.weight_kg }} кг</p>
-            <p>Дата: {{ new Date(order.loading_date).toLocaleDateString('ru-RU') }}</p>
+          <div class="flex items-start justify-between mb-4">
+            <h3 class="text-lg font-semibold text-white flex-1 line-clamp-2">
+              {{ order.pickup_address }} → {{ order.delivery_address }}
+            </h3>
+            <span 
+              :class="[
+                'px-2 py-1 rounded-full text-xs font-semibold ml-2 whitespace-nowrap',
+                order.status === 'active' ? 'bg-green-500/20 text-green-300' :
+                order.status === 'in_progress' ? 'bg-blue-500/20 text-blue-300' :
+                'bg-gray-500/20 text-gray-300'
+              ]"
+            >
+              {{ getStatusText(order.status) }}
+            </span>
           </div>
+          
+          <div class="text-gray-300 text-sm space-y-2 mb-4">
+            <div class="flex justify-between">
+              <span>Вес:</span>
+              <span class="font-semibold">{{ formatNumber(order.weight_kg) }} кг</span>
+            </div>
+            <div v-if="order.truck_type" class="flex justify-between">
+              <span>Тип кузова:</span>
+              <span class="font-semibold">{{ getTruckTypeText(order.truck_type) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Дата:</span>
+              <span class="font-semibold">{{ formatDate(order.loading_date) || 'договорная' }}</span>
+            </div>
+          </div>
+          
           <div class="text-2xl font-bold text-blue-400">
-            {{ order.price }} {{ order.currency || 'BYN' }}
+            {{ formatNumber(order.price) }} {{ order.currency || 'BYN' }}
           </div>
         </router-link>
       </div>
@@ -121,10 +147,11 @@
           v-for="route in popularRoutes" 
           :key="route.id"
           class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer"
+          @click="searchRoute(route.from, route.to)"
         >
           <h3 class="text-lg font-semibold text-white mb-2">{{ route.from }}</h3>
           <p class="text-gray-300 text-sm mb-2">→ {{ route.to }}</p>
-          <p class="text-blue-400 font-bold">{{ route.count }} заказов/мес</p>
+          <p class="text-blue-400 font-bold">{{ route.count }} заказов</p>
         </div>
       </div>
     </section>
@@ -133,24 +160,80 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/api/client'
 
 const authStore = useAuthStore()
+const router = useRouter()
+
 const loading = ref(true)
 const orders = ref([])
 const popularRoutes = ref([])
 const searchFrom = ref('')
 const searchTo = ref('')
 
+const getStatusText = (status) => {
+  const statusMap = {
+    active: 'Активен',
+    in_progress: 'В работе',
+    completed: 'Выполнен',
+    canceled: 'Отменён'
+  }
+  return statusMap[status] || status
+}
+
+const getTruckTypeText = (type) => {
+  const typeMap = {
+    refrigerator: ' Рефрижератор',
+    tent: ' Тент',
+    flatbed: ' Платформа',
+    container: ' Контейнеровоз',
+    curtain: ' Штора',
+    isothermal: ' Изотермический'
+  }
+  return typeMap[type] || type
+}
+
+const formatNumber = (value) => {
+  if (!value) return '0'
+  return new Intl.NumberFormat('ru-RU').format(value)
+}
+
+const formatDate = (date) => {
+  if (!date) return null
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return null
+  return d.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'short'
+  })
+}
+
 const fetchOrders = async () => {
+  loading.value = true
+  
   try {
+    // Бэкенд возвращает массив напрямую, а не объект с полем orders
     const response = await apiClient.get('/api/orders', { 
-      params: { sort: 'latest', limit: 6 } 
+      params: { sort: 'latest', limit: 6, status: 'active' }
     })
-    orders.value = response.data
+    
+    // Если ответ — массив, используем его напрямую
+    if (Array.isArray(response.data)) {
+      orders.value = response.data
+    } 
+    // Если ответ — объект с полем orders (как в README)
+    else if (response.data.orders && Array.isArray(response.data.orders)) {
+      orders.value = response.data.orders
+    }
+    // Если ответ — объект с данными в другом формате
+    else {
+      orders.value = []
+    }
   } catch (error) {
     console.error('Failed to fetch orders:', error)
+    orders.value = []
   } finally {
     loading.value = false
   }
@@ -161,9 +244,10 @@ const fetchPopularRoutes = async () => {
     const response = await apiClient.get('/api/statistics/popular-routes', { 
       params: { limit: 5 } 
     })
-    popularRoutes.value = response.data
+    popularRoutes.value = response.data || []
   } catch (error) {
     console.error('Failed to fetch popular routes:', error)
+    popularRoutes.value = []
   }
 }
 
@@ -172,7 +256,13 @@ const handleSearch = () => {
   if (searchFrom.value) params.set('from', searchFrom.value)
   if (searchTo.value) params.set('to', searchTo.value)
   
-  window.location.href = `/orders?${params.toString()}`
+  router.push(`/orders?${params.toString()}`)
+}
+
+const searchRoute = (from, to) => {
+  searchFrom.value = from
+  searchTo.value = to
+  handleSearch()
 }
 
 onMounted(() => {
