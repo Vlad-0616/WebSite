@@ -1,6 +1,17 @@
-# netlify.toml
 [build]
-  # either leave base out if root is repo root
-  # base = "subfolder"   # path relative to repo root, no leading slash
-  publish = "dist"       # example, also relative
-  command = "npm run build"
+  # Переходим в папку frontend и запускаем сборку
+  command = "cd frontend && npm ci && npm run build"
+  # Публикуем содержимое папки frontend/dist
+  publish = "frontend/dist"
+
+# Перенаправление всех маршрутов на index.html (для Vue Router)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Кэширование статических ресурсов
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
