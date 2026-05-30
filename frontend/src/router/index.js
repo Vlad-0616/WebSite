@@ -1,8 +1,8 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-
-// Импортируем OrdersListView статически, чтобы избежать проблем с динамической загрузкой
 import OrdersListView from '../views/orders/OrdersListView.vue'
+// Статический импорт стора для стабильной работы сборки
+import { useAuthStore } from '../stores/auth'
 
 const routes = [
   {
@@ -36,7 +36,7 @@ const routes = [
       {
         path: '',
         name: 'orders',
-        component: OrdersListView  // Используем статический импорт
+        component: OrdersListView
       },
       {
         path: 'create',
@@ -102,7 +102,8 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  // Использование хэш-истории решает проблему с 404/пустым экраном на статическом хостинге GitHub
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
@@ -113,8 +114,8 @@ const router = createRouter({
   }
 })
 
-router.beforeEach(async (to, from) => {
-  const { useAuthStore } = await import('../stores/auth')
+// Синхронный навигационный гвард (работает быстрее и стабильнее в продакшене)
+router.beforeEach((to, from) => {
   const authStore = useAuthStore()
 
   if (to.path.startsWith('/auth') && authStore.isAuthenticated) {
