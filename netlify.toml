@@ -1,0 +1,6 @@
+# netlify.toml
+[build]
+  # either leave base out if root is repo root
+  # base = "subfolder"   # path relative to repo root, no leading slash
+  publish = "dist"       # example, also relative
+  command = "npm run build"
