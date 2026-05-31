@@ -1,0 +1,21 @@
+{
+  "version": "1.2",
+  "builds": [
+    {
+      "name": "backend",
+      "buildCommand": "cd backend && npm install",
+      "startCommand": "cd backend && npm start",
+      "src": "backend/"
+    },
+    {
+      "name": "frontend",
+      "buildCommand": "cd frontend && npm install && npm run build",
+      "startCommand": "cd frontend && npm run start",
+      "src": "frontend/",
+      "env": {
+        "NODE_VERSION": "20.x",
+        "VITE_API_BASE_URL": "${BACKEND_URL}"
+      }
+    }
+  ]
+}
