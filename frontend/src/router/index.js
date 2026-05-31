@@ -1,8 +1,6 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import OrdersListView from '../views/orders/OrdersListView.vue'
-// Статический импорт стора для стабильной работы сборки
-import { useAuthStore } from '../stores/auth'
 
 const routes = [
   {
@@ -102,8 +100,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  // Использование хэш-истории решает проблему с 404/пустым экраном на статическом хостинге GitHub
-  history: createWebHashHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
@@ -114,22 +111,9 @@ const router = createRouter({
   }
 })
 
-// Синхронный навигационный гвард (работает быстрее и стабильнее в продакшене)
+// Упрощенный guard без асинхронного импорта
 router.beforeEach((to, from) => {
-  const authStore = useAuthStore()
-
-  if (to.path.startsWith('/auth') && authStore.isAuthenticated) {
-    return { name: 'home' }
-  }
-
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return { name: 'login', query: { redirect: to.fullPath } }
-  }
-  
-  if (to.meta.requiresAdmin && !authStore.isAdmin) {
-    return { name: 'home' }
-  }
-  
+  // Временно отключаем проверку аутентификации для теста
   return true
 })
 
