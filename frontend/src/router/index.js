@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import OrdersListView from '../views/orders/OrdersListView.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const routes = [
   {
@@ -14,17 +15,20 @@ const routes = [
       {
         path: 'login',
         name: 'login',
-        component: () => import('../views/auth/LoginView.vue')
+        component: () => import('../views/auth/LoginView.vue'),
+        meta: { guest: true }
       },
       {
         path: 'register',
         name: 'register',
-        component: () => import('../views/auth/RegisterView.vue')
+        component: () => import('../views/auth/RegisterView.vue'),
+        meta: { guest: true }
       },
       {
         path: 'recover',
         name: 'recover',
-        component: () => import('../views/auth/RecoverView.vue')
+        component: () => import('../views/auth/RecoverView.vue'),
+        meta: { guest: true }
       }
     ]
   },
@@ -62,26 +66,31 @@ const routes = [
       {
         path: 'my-orders',
         name: 'my-orders',
+        meta: { requiresAuth: true },
         component: () => import('../views/profile/MyOrdersView.vue')
       },
       {
         path: 'settings',
         name: 'profile-settings',
+        meta: { requiresAuth: true },
         component: () => import('../views/profile/SettingsView.vue')
       },
       {
         path: 'transporter/orders',
         name: 'transporter-orders',
+        meta: { requiresAuth: true, role: 'carrier' },
         component: () => import('../views/profile/TransporterOrdersView.vue')
       },
       {
         path: 'transporter/trucks',
         name: 'transporter-trucks',
+        meta: { requiresAuth: true, role: 'carrier' },
         component: () => import('../views/profile/TransporterTrucksView.vue')
       },
       {
         path: 'transporter/settings',
         name: 'transporter-settings',
+        meta: { requiresAuth: true, role: 'carrier' },
         component: () => import('../views/profile/TransporterSettingsView.vue')
       }
     ]
@@ -111,10 +120,34 @@ const router = createRouter({
   }
 })
 
-// Упрощенный guard без асинхронного импорта
-router.beforeEach((to, from) => {
-  // Временно отключаем проверку аутентификации для теста
-  return true
+// Защита маршрутов
+router.beforeEach(async (to, from) => {
+  const authStore = useAuthStore()
+  
+  if (!authStore.user && authStore.accessToken) {
+    await authStore.fetchUser()
+  }
+  
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
+  const requiredRole = to.matched.find(record => record.meta.role)?.meta?.role
+  const isGuestOnly = to.matched.some(record => record.meta.guest)
+  
+  if (isGuestOnly && authStore.isAuthenticated) {
+    return '/'
+  }
+  
+  if (requiresAuth && !authStore.isAuthenticated) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  
+  if (requiresAdmin && !authStore.isAdmin) {
+    return '/'
+  }
+  
+  if (requiredRole && requiredRole === 'carrier' && !authStore.isCarrier) {
+    return '/profile'
+  }
 })
 
 export default router
