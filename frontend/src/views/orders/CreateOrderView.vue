@@ -80,6 +80,8 @@
               <option value="tent">Тент</option>
               <option value="flatbed">Платформа</option>
               <option value="container">Контейнер</option>
+              <option value="curtain">Штора</option>
+              <option value="isothermal">Изотермический</option>
             </select>
           </div>
           
@@ -103,8 +105,10 @@
           <input 
             v-model="form.loading_date"
             type="date"
+            :min="minDate"
             class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <p class="text-gray-400 text-xs mt-1">Выберите сегодняшнюю или будущую дату</p>
         </div>
 
         <div>
@@ -131,8 +135,8 @@
           </button>
           <button 
             type="submit"
-            :disabled="loading"
-            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
+            :disabled="loading || !isFormValid"
+            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ loading ? 'Создание...' : 'Создать заказ' }}
           </button>
@@ -143,7 +147,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import apiClient from '@/api/client'
@@ -153,6 +157,15 @@ const appStore = useAppStore()
 
 const loading = ref(false)
 const error = ref('')
+
+// Минимальная дата - сегодня
+const minDate = computed(() => {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+})
 
 const form = ref({
   pickup_address: '',
@@ -166,7 +179,40 @@ const form = ref({
   description: ''
 })
 
+// Проверка валидности формы
+const isFormValid = computed(() => {
+  // Проверка обязательных полей
+  if (!form.value.pickup_address || !form.value.delivery_address || !form.value.weight_kg || !form.value.price) {
+    return false
+  }
+  
+  // Проверка даты (если указана)
+  if (form.value.loading_date) {
+    const selectedDate = new Date(form.value.loading_date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (selectedDate < today) {
+      return false
+    }
+  }
+  
+  return true
+})
+
 const handleSubmit = async () => {
+  // Дополнительная проверка даты перед отправкой
+  if (form.value.loading_date) {
+    const selectedDate = new Date(form.value.loading_date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (selectedDate < today) {
+      error.value = 'Дата погрузки не может быть в прошлом. Выберите сегодняшнюю или будущую дату.'
+      return
+    }
+  }
+  
   loading.value = true
   error.value = ''
   
@@ -174,7 +220,6 @@ const handleSubmit = async () => {
     const response = await apiClient.post('/api/orders', form.value)
     appStore.addNotification({ type: 'success', message: 'Заказ успешно создан' })
     
-    // Добавляем задержку перед редиректом, чтобы уведомление успело отобразиться
     setTimeout(() => {
       router.push(`/orders/${response.data.order.id}`)
     }, 500)
