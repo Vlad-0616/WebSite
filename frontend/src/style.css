@@ -6,6 +6,22 @@ body {
   padding: 0;
 }
 
+/* Мобильная адаптация */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+}
+
 select option {
   background-color: #1e293b !important;
   color: #ffffff !important;
