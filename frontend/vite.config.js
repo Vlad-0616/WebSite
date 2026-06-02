@@ -6,7 +6,7 @@ export default defineConfig({
 plugins: [vue()],
 
 // Для GitHub Pages
-base: '/Vlad-0616/',
+base: '/WebSite/',
 
 resolve: {
 alias: {
