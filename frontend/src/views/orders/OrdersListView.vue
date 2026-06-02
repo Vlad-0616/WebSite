@@ -1,50 +1,48 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <h1 class="text-4xl font-bold text-white mb-8">Каталог заказов</h1>
+  <div class="container mx-auto px-4 py-6 md:py-8">
+    <h1 class="text-2xl md:text-4xl font-bold text-white mb-6 md:mb-8">Каталог заказов</h1>
     
     <!-- Простые фильтры -->
-    <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-8">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-white/20 mb-6 md:mb-8">
+      <div class="flex flex-col gap-4">
         <div>
-          <label class="block text-gray-300 mb-2">Откуда</label>
+          <label class="block text-gray-300 mb-2 text-sm md:text-base">Откуда</label>
           <input 
             v-model="filters.from"
             @input="debounceSearch"
             type="text" 
             placeholder="Минск"
-            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
           />
         </div>
         <div>
-          <label class="block text-gray-300 mb-2">Куда</label>
+          <label class="block text-gray-300 mb-2 text-sm md:text-base">Куда</label>
           <input 
             v-model="filters.to"
             @input="debounceSearch"
             type="text" 
             placeholder="Брест"
-            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
           />
         </div>
-        <div class="flex items-end">
-          <button 
-            @click="resetFilters"
-            class="w-full bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg transition-colors border border-white/20"
-          >
-            Сбросить фильтры
-          </button>
-        </div>
+        <button 
+          @click="resetFilters"
+          class="w-full bg-white/10 hover:bg-white/20 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg transition-colors border border-white/20 text-sm md:text-base"
+        >
+          Сбросить фильтры
+        </button>
       </div>
     </div>
 
     <!-- Расширенные фильтры -->
-    <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-8">
+    <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-white/20 mb-6 md:mb-8">
       <button 
         @click="showFilters = !showFilters"
-        class="flex items-center justify-between w-full text-white font-semibold"
+        class="flex items-center justify-between w-full text-white font-semibold text-sm md:text-base"
       >
         <span>Расширенные фильтры</span>
         <svg 
-          class="w-5 h-5 transition-transform"
+          class="w-4 h-4 md:w-5 md:h-5 transition-transform"
           :class="{ 'rotate-180': showFilters }"
           fill="none" 
           stroke="currentColor" 
@@ -54,14 +52,14 @@
         </svg>
       </button>
       
-      <div v-show="showFilters" class="mt-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-show="showFilters" class="mt-4 md:mt-6">
+        <div class="flex flex-col gap-4">
           <div>
-            <label class="block text-gray-300 mb-2">Тип кузова</label>
+            <label class="block text-gray-300 mb-2 text-sm md:text-base">Тип кузова</label>
             <select 
               v-model="filters.truck_type"
               @change="fetchOrders"
-              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
             >
               <option value="">Все типы</option>
               <option value="refrigerator">Рефрижератор</option>
@@ -72,98 +70,103 @@
               <option value="isothermal">Изотермический</option>
             </select>
           </div>
-          <div>
-            <label class="block text-gray-300 mb-2">Вес от (кг)</label>
-            <input 
-              v-model.number="filters.weight_min"
-              @change="fetchOrders"
-              type="number" 
-              placeholder="1000"
-              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div class="grid grid-cols-2 gap-3 md:gap-4">
+            <div>
+              <label class="block text-gray-300 mb-2 text-sm md:text-base">Вес от (кг)</label>
+              <input 
+                v-model.number="filters.weight_min"
+                @change="fetchOrders"
+                type="number" 
+                placeholder="1000"
+                class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+              />
+            </div>
+            <div>
+              <label class="block text-gray-300 mb-2 text-sm md:text-base">Вес до (кг)</label>
+              <input 
+                v-model.number="filters.weight_max"
+                @change="fetchOrders"
+                type="number" 
+                placeholder="20000"
+                class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+              />
+            </div>
           </div>
-          <div>
-            <label class="block text-gray-300 mb-2">Вес до (кг)</label>
-            <input 
-              v-model.number="filters.weight_max"
-              @change="fetchOrders"
-              type="number" 
-              placeholder="20000"
-              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label class="block text-gray-300 mb-2">Цена от (BYN)</label>
-            <input 
-              v-model.number="filters.price_min"
-              @change="fetchOrders"
-              type="number" 
-              placeholder="100"
-              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label class="block text-gray-300 mb-2">Цена до (BYN)</label>
-            <input 
-              v-model.number="filters.price_max"
-              @change="fetchOrders"
-              type="number" 
-              placeholder="5000"
-              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div class="grid grid-cols-2 gap-3 md:gap-4">
+            <div>
+              <label class="block text-gray-300 mb-2 text-sm md:text-base">Цена от (BYN)</label>
+              <input 
+                v-model.number="filters.price_min"
+                @change="fetchOrders"
+                type="number" 
+                placeholder="100"
+                class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+              />
+            </div>
+            <div>
+              <label class="block text-gray-300 mb-2 text-sm md:text-base">Цена до (BYN)</label>
+              <input 
+                v-model.number="filters.price_max"
+                @change="fetchOrders"
+                type="number" 
+                placeholder="5000"
+                class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+              />
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Активные фильтры -->
-    <div v-if="activeFiltersCount > 0" class="flex flex-wrap gap-2 mb-6">
-      <span class="text-gray-300 text-sm">Активные фильтры:</span>
+    <div v-if="activeFiltersCount > 0" class="flex flex-wrap gap-2 mb-4 md:mb-6">
+      <span class="text-gray-300 text-xs md:text-sm">Активные фильтры:</span>
       <span 
         v-for="filter in activeFiltersList" 
         :key="filter.key"
-        class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm"
+        class="inline-flex items-center gap-1 px-2 py-1 md:px-3 md:py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs md:text-sm"
       >
         {{ filter.label }}
         <button @click="removeFilter(filter.key)" class="hover:text-white">×</button>
       </span>
-      <button @click="resetFilters" class="text-red-400 hover:text-red-300 text-sm ml-2">
+      <button @click="resetFilters" class="text-red-400 hover:text-red-300 text-xs md:text-sm ml-2">
         Сбросить всё
       </button>
     </div>
 
     <!-- Список заказов -->
-    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="i in 6" :key="i" class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 animate-pulse">
-        <div class="h-6 bg-white/20 rounded mb-4 w-3/4"></div>
-        <div class="h-4 bg-white/10 rounded mb-2"></div>
-        <div class="h-4 bg-white/10 rounded mb-4"></div>
+    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <div v-for="i in 6" :key="i" class="bg-white/10 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-white/20 animate-pulse">
+        <div class="h-5 md:h-6 bg-white/20 rounded mb-3 md:mb-4 w-3/4"></div>
+        <div class="h-3 md:h-4 bg-white/10 rounded mb-2"></div>
+        <div class="h-3 md:h-4 bg-white/10 rounded mb-3 md:mb-4"></div>
+        <div class="h-6 md:h-8 bg-white/20 rounded w-1/2"></div>
       </div>
     </div>
 
-    <div v-else-if="orders.length === 0" class="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-white/20 text-center">
-      <svg class="w-20 h-20 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div v-else-if="orders.length === 0" class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 md:p-12 border border-white/20 text-center">
+      <svg class="w-16 h-16 md:w-20 md:h-20 text-gray-500 mx-auto mb-3 md:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
       </svg>
-      <p class="text-gray-400 text-lg mb-4">Нет заказов по заданным фильтрам</p>
+      <p class="text-gray-400 text-base md:text-lg mb-4">Нет заказов по заданным фильтрам</p>
       <button 
         @click="resetFilters"
-        class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 md:px-6 md:py-3 rounded-lg transition-colors text-sm md:text-base"
       >
         Сбросить фильтры
       </button>
     </div>
 
     <div v-else>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6">
         <router-link 
           v-for="order in orders" 
           :key="order.id"
           :to="`/orders/${order.id}`"
-          class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-colors block"
+          class="bg-white/10 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-white/20 hover:bg-white/15 transition-colors block"
         >
-          <div class="flex items-start justify-between mb-4">
-            <h3 class="text-lg font-semibold text-white flex-1 line-clamp-2">
+          <div class="flex items-start justify-between mb-3 md:mb-4">
+            <h3 class="text-sm md:text-lg font-semibold text-white flex-1 line-clamp-2">
               {{ order.pickup_address }} → {{ order.delivery_address }}
             </h3>
             <span 
@@ -178,22 +181,22 @@
             </span>
           </div>
           
-          <div class="text-gray-300 text-sm space-y-2 mb-4">
+          <div class="text-gray-300 text-xs md:text-sm space-y-1 md:space-y-2 mb-3 md:mb-4">
             <div class="flex justify-between">
               <span>Вес:</span>
               <span class="font-semibold">{{ formatNumber(order.weight_kg) }} кг</span>
             </div>
             <div v-if="order.truck_type" class="flex justify-between">
               <span>Тип кузова:</span>
-              <span class="font-semibold">{{ getTruckTypeText(order.truck_type) }}</span>
+              <span class="font-semibold text-xs md:text-sm">{{ getTruckTypeText(order.truck_type) }}</span>
             </div>
             <div class="flex justify-between">
               <span>Дата:</span>
-              <span class="font-semibold">{{ formatDate(order.loading_date) || 'договорная' }}</span>
+              <span class="font-semibold text-xs md:text-sm">{{ formatDate(order.loading_date) || 'договорная' }}</span>
             </div>
           </div>
           
-          <div class="text-2xl font-bold text-blue-400">
+          <div class="text-xl md:text-2xl font-bold text-blue-400">
             {{ formatNumber(order.price) }} {{ order.currency || 'BYN' }}
           </div>
 
@@ -201,7 +204,7 @@
             v-if="authStore.isCarrier && order.status === 'active' && order.shipper_id !== authStore.user?.id"
             @click.stop="acceptOrder(order.id)"
             :disabled="acceptingOrderId === order.id"
-            class="mt-4 w-full bg-green-500/20 hover:bg-green-500/30 text-green-300 px-4 py-2 rounded-lg transition-colors text-sm font-semibold disabled:opacity-50"
+            class="mt-3 md:mt-4 w-full bg-green-500/20 hover:bg-green-500/30 text-green-300 px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors text-xs md:text-sm font-semibold disabled:opacity-50"
           >
             {{ acceptingOrderId === order.id ? 'Принятие...' : 'Принять заказ' }}
           </button>
@@ -209,41 +212,46 @@
       </div>
       
       <!-- Пагинация -->
-      <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 mt-8">
-        <button 
-          @click="changePage(currentPage - 1)"
-          :disabled="currentPage === 1"
-          class="px-4 py-2 bg-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 transition-colors"
-        >
-          ← Предыдущая
-        </button>
-        
-        <div class="flex gap-2">
+      <div v-if="totalPages > 1" class="flex flex-col items-center gap-4 mt-6 md:mt-8">
+        <div class="flex justify-center items-center gap-2 md:gap-4">
           <button 
-            v-for="page in displayedPages"
-            :key="page"
-            @click="changePage(page)"
-            :class="[
-              'px-4 py-2 rounded-lg transition-colors',
-              page === currentPage 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-white/10 text-white hover:bg-white/20'
-            ]"
+            @click="changePage(currentPage - 1)"
+            :disabled="currentPage === 1"
+            class="px-3 py-1.5 md:px-4 md:py-2 bg-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 transition-colors text-sm md:text-base"
           >
-            {{ page }}
+            ←
+          </button>
+          
+          <div class="flex gap-1 md:gap-2">
+            <button 
+              v-for="page in displayedPages"
+              :key="page"
+              @click="changePage(page)"
+              :class="[
+                'px-2 py-1 md:px-4 md:py-2 rounded-lg transition-colors text-sm md:text-base',
+                page === currentPage 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              ]"
+            >
+              {{ page }}
+            </button>
+          </div>
+          
+          <button 
+            @click="changePage(currentPage + 1)"
+            :disabled="currentPage === totalPages"
+            class="px-3 py-1.5 md:px-4 md:py-2 bg-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 transition-colors text-sm md:text-base"
+          >
+            →
           </button>
         </div>
-        
-        <button 
-          @click="changePage(currentPage + 1)"
-          :disabled="currentPage === totalPages"
-          class="px-4 py-2 bg-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 transition-colors"
-        >
-          Следующая →
-        </button>
+        <div class="text-center text-gray-400 text-xs md:text-sm">
+          Показано {{ orders.length }} из {{ totalOrders }} заказов
+        </div>
       </div>
       
-      <div class="text-center text-gray-400 text-sm mt-4">
+      <div v-else class="text-center text-gray-400 text-xs md:text-sm mt-4">
         Показано {{ orders.length }} из {{ totalOrders }} заказов
       </div>
     </div>
@@ -281,7 +289,6 @@ const filters = ref({
   price_max: route.query.price_max ? Number(route.query.price_max) : null
 })
 
-// Вычисляем отображаемые страницы
 const displayedPages = computed(() => {
   const delta = 2
   const range = []
@@ -374,7 +381,6 @@ const fetchOrders = async () => {
     
     const response = await apiClient.get('/api/orders', { params })
     
-    // Обработка ответа с пагинацией
     if (response.data.orders && Array.isArray(response.data.orders)) {
       orders.value = response.data.orders
       totalOrders.value = response.data.total || 0
@@ -390,7 +396,6 @@ const fetchOrders = async () => {
       totalPages.value = 1
     }
     
-    // Обновляем URL с параметрами
     const queryParams = {}
     Object.entries(filters.value).forEach(([key, val]) => {
       if (val && val !== '') queryParams[key] = val
