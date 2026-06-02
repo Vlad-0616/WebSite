@@ -3,24 +3,29 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
-  base: "/WebSite/",
-  plugins: [vue()],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  },
-  server: {
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:3000',
-        changeOrigin: true
-      }
-    }
-  },
-  preview: {
-    port: 8080,
-    host: '0.0.0.0'
-  }
+plugins: [vue()],
+
+// Для GitHub Pages
+base: '/Vlad-0616/',
+
+resolve: {
+alias: {
+'@': fileURLToPath(new URL('./src', import.meta.url))
+}
+},
+
+server: {
+port: 5173,
+proxy: {
+'/api': {
+target: process.env.VITE_API_URL || 'http://localhost:3000',
+changeOrigin: true
+}
+}
+},
+
+preview: {
+port: 8080,
+host: '0.0.0.0'
+}
 })
