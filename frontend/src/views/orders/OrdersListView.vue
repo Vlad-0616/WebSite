@@ -1,4 +1,3 @@
-<!-- frontend/src/views/orders/OrdersListView.vue -->
 <template>
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-4xl font-bold text-white mb-8">Каталог заказов</h1>
@@ -155,58 +154,98 @@
       </button>
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <router-link 
-        v-for="order in orders" 
-        :key="order.id"
-        :to="`/orders/${order.id}`"
-        class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-colors block"
-      >
-        <div class="flex items-start justify-between mb-4">
-          <h3 class="text-lg font-semibold text-white flex-1 line-clamp-2">
-            {{ order.pickup_address }} → {{ order.delivery_address }}
-          </h3>
-          <span 
+    <div v-else>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <router-link 
+          v-for="order in orders" 
+          :key="order.id"
+          :to="`/orders/${order.id}`"
+          class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-colors block"
+        >
+          <div class="flex items-start justify-between mb-4">
+            <h3 class="text-lg font-semibold text-white flex-1 line-clamp-2">
+              {{ order.pickup_address }} → {{ order.delivery_address }}
+            </h3>
+            <span 
+              :class="[
+                'px-2 py-1 rounded-full text-xs font-semibold ml-2 whitespace-nowrap',
+                order.status === 'active' ? 'bg-green-500/20 text-green-300' :
+                order.status === 'in_progress' ? 'bg-blue-500/20 text-blue-300' :
+                'bg-gray-500/20 text-gray-300'
+              ]"
+            >
+              {{ getStatusText(order.status) }}
+            </span>
+          </div>
+          
+          <div class="text-gray-300 text-sm space-y-2 mb-4">
+            <div class="flex justify-between">
+              <span>Вес:</span>
+              <span class="font-semibold">{{ formatNumber(order.weight_kg) }} кг</span>
+            </div>
+            <div v-if="order.truck_type" class="flex justify-between">
+              <span>Тип кузова:</span>
+              <span class="font-semibold">{{ getTruckTypeText(order.truck_type) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Дата:</span>
+              <span class="font-semibold">{{ formatDate(order.loading_date) || 'договорная' }}</span>
+            </div>
+          </div>
+          
+          <div class="text-2xl font-bold text-blue-400">
+            {{ formatNumber(order.price) }} {{ order.currency || 'BYN' }}
+          </div>
+
+          <button 
+            v-if="authStore.isCarrier && order.status === 'active' && order.shipper_id !== authStore.user?.id"
+            @click.stop="acceptOrder(order.id)"
+            :disabled="acceptingOrderId === order.id"
+            class="mt-4 w-full bg-green-500/20 hover:bg-green-500/30 text-green-300 px-4 py-2 rounded-lg transition-colors text-sm font-semibold disabled:opacity-50"
+          >
+            {{ acceptingOrderId === order.id ? 'Принятие...' : 'Принять заказ' }}
+          </button>
+        </router-link>
+      </div>
+      
+      <!-- Пагинация -->
+      <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 mt-8">
+        <button 
+          @click="changePage(currentPage - 1)"
+          :disabled="currentPage === 1"
+          class="px-4 py-2 bg-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 transition-colors"
+        >
+          ← Предыдущая
+        </button>
+        
+        <div class="flex gap-2">
+          <button 
+            v-for="page in displayedPages"
+            :key="page"
+            @click="changePage(page)"
             :class="[
-              'px-2 py-1 rounded-full text-xs font-semibold ml-2 whitespace-nowrap',
-              order.status === 'active' ? 'bg-green-500/20 text-green-300' :
-              order.status === 'in_progress' ? 'bg-blue-500/20 text-blue-300' :
-              'bg-gray-500/20 text-gray-300'
+              'px-4 py-2 rounded-lg transition-colors',
+              page === currentPage 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-white/10 text-white hover:bg-white/20'
             ]"
           >
-            {{ getStatusText(order.status) }}
-          </span>
+            {{ page }}
+          </button>
         </div>
         
-        <div class="text-gray-300 text-sm space-y-2 mb-4">
-          <div class="flex justify-between">
-            <span>Вес:</span>
-            <span class="font-semibold">{{ formatNumber(order.weight_kg) }} кг</span>
-          </div>
-          <div v-if="order.truck_type" class="flex justify-between">
-            <span>Тип кузова:</span>
-            <span class="font-semibold">{{ getTruckTypeText(order.truck_type) }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span>Дата:</span>
-            <span class="font-semibold">{{ formatDate(order.loading_date) || 'договорная' }}</span>
-          </div>
-        </div>
-        
-        <div class="text-2xl font-bold text-blue-400">
-          {{ formatNumber(order.price) }} {{ order.currency || 'BYN' }}
-        </div>
-
-        <!-- Кнопка принятия заказа для перевозчика -->
         <button 
-          v-if="authStore.isCarrier && order.status === 'active' && order.shipper_id !== authStore.user?.id"
-          @click.stop="acceptOrder(order.id)"
-          :disabled="acceptingOrderId === order.id"
-          class="mt-4 w-full bg-green-500/20 hover:bg-green-500/30 text-green-300 px-4 py-2 rounded-lg transition-colors text-sm font-semibold disabled:opacity-50"
+          @click="changePage(currentPage + 1)"
+          :disabled="currentPage === totalPages"
+          class="px-4 py-2 bg-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 transition-colors"
         >
-          {{ acceptingOrderId === order.id ? 'Принятие...' : 'Принять заказ' }}
+          Следующая →
         </button>
-      </router-link>
+      </div>
+      
+      <div class="text-center text-gray-400 text-sm mt-4">
+        Показано {{ orders.length }} из {{ totalOrders }} заказов
+      </div>
     </div>
   </div>
 </template>
@@ -228,6 +267,9 @@ const loading = ref(true)
 const orders = ref([])
 const showFilters = ref(false)
 const acceptingOrderId = ref(null)
+const currentPage = ref(1)
+const totalPages = ref(1)
+const totalOrders = ref(0)
 
 const filters = ref({
   from: route.query.from || '',
@@ -237,6 +279,34 @@ const filters = ref({
   weight_max: route.query.weight_max ? Number(route.query.weight_max) : null,
   price_min: route.query.price_min ? Number(route.query.price_min) : null,
   price_max: route.query.price_max ? Number(route.query.price_max) : null
+})
+
+// Вычисляем отображаемые страницы
+const displayedPages = computed(() => {
+  const delta = 2
+  const range = []
+  const rangeWithDots = []
+  let l
+
+  for (let i = 1; i <= totalPages.value; i++) {
+    if (i === 1 || i === totalPages.value || Math.abs(i - currentPage.value) <= delta) {
+      range.push(i)
+    }
+  }
+
+  range.forEach((i) => {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1)
+      } else if (i - l !== 1) {
+        rangeWithDots.push('...')
+      }
+    }
+    rangeWithDots.push(i)
+    l = i
+  })
+
+  return rangeWithDots
 })
 
 const activeFiltersCount = computed(() => {
@@ -268,32 +338,66 @@ let searchTimeout = null
 const debounceSearch = () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
+    currentPage.value = 1
     fetchOrders()
   }, 500)
 }
 
 const removeFilter = (key) => {
   filters.value[key] = ''
+  currentPage.value = 1
   fetchOrders()
+}
+
+const changePage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    fetchOrders()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 }
 
 const fetchOrders = async () => {
   loading.value = true
   
   try {
-    const params = { status: 'active', sort: 'latest', limit: 20 }
+    const params = { 
+      status: 'active', 
+      sort: 'latest', 
+      limit: 20,
+      page: currentPage.value
+    }
+    
     Object.entries(filters.value).forEach(([key, val]) => {
       if (val && val !== '') params[key] = val
     })
     
     const response = await apiClient.get('/api/orders', { params })
-    orders.value = Array.isArray(response.data) ? response.data : (response.data.orders || [])
     
+    // Обработка ответа с пагинацией
+    if (response.data.orders && Array.isArray(response.data.orders)) {
+      orders.value = response.data.orders
+      totalOrders.value = response.data.total || 0
+      totalPages.value = response.data.pages || 1
+      currentPage.value = response.data.page || 1
+    } else if (Array.isArray(response.data)) {
+      orders.value = response.data
+      totalOrders.value = orders.value.length
+      totalPages.value = 1
+    } else {
+      orders.value = []
+      totalOrders.value = 0
+      totalPages.value = 1
+    }
+    
+    // Обновляем URL с параметрами
     const queryParams = {}
     Object.entries(filters.value).forEach(([key, val]) => {
       if (val && val !== '') queryParams[key] = val
     })
+    if (currentPage.value > 1) queryParams.page = currentPage.value
     router.replace({ query: queryParams })
+    
   } catch (error) {
     console.error('Failed to fetch orders:', error)
     orders.value = []
@@ -312,6 +416,7 @@ const resetFilters = () => {
     price_min: null,
     price_max: null
   }
+  currentPage.value = 1
   fetchOrders()
 }
 
@@ -373,6 +478,9 @@ const formatDate = (date) => {
 }
 
 onMounted(() => {
+  if (route.query.page) {
+    currentPage.value = parseInt(route.query.page) || 1
+  }
   fetchOrders()
 })
 </script>
