@@ -1,491 +1,205 @@
 <template>
-  <div class="container mx-auto px-4 py-6 md:py-8">
-    <h1 class="text-2xl md:text-4xl font-bold text-white mb-6 md:mb-8">Каталог заказов</h1>
-    
-    <!-- Простые фильтры -->
-    <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-white/20 mb-6 md:mb-8">
-      <div class="flex flex-col gap-4">
-        <div>
-          <label class="block text-gray-300 mb-2 text-sm md:text-base">Откуда</label>
-          <input 
-            v-model="filters.from"
-            @input="debounceSearch"
-            type="text" 
-            placeholder="Минск"
-            class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-          />
-        </div>
-        <div>
-          <label class="block text-gray-300 mb-2 text-sm md:text-base">Куда</label>
-          <input 
-            v-model="filters.to"
-            @input="debounceSearch"
-            type="text" 
-            placeholder="Брест"
-            class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-          />
-        </div>
-        <button 
-          @click="resetFilters"
-          class="w-full bg-white/10 hover:bg-white/20 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg transition-colors border border-white/20 text-sm md:text-base"
-        >
-          Сбросить фильтры
-        </button>
-      </div>
-    </div>
-
-    <!-- Расширенные фильтры -->
-    <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-white/20 mb-6 md:mb-8">
-      <button 
-        @click="showFilters = !showFilters"
-        class="flex items-center justify-between w-full text-white font-semibold text-sm md:text-base"
-      >
-        <span>Расширенные фильтры</span>
-        <svg 
-          class="w-4 h-4 md:w-5 md:h-5 transition-transform"
-          :class="{ 'rotate-180': showFilters }"
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      
-      <div v-show="showFilters" class="mt-4 md:mt-6">
-        <div class="flex flex-col gap-4">
-          <div>
-            <label class="block text-gray-300 mb-2 text-sm md:text-base">Тип кузова</label>
-            <select 
-              v-model="filters.truck_type"
-              @change="fetchOrders"
-              class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-            >
-              <option value="">Все типы</option>
-              <option value="refrigerator">Рефрижератор</option>
-              <option value="tent">Тент</option>
-              <option value="flatbed">Платформа</option>
-              <option value="container">Контейнеровоз</option>
-              <option value="curtain">Штора</option>
-              <option value="isothermal">Изотермический</option>
-            </select>
-          </div>
-          <div class="grid grid-cols-2 gap-3 md:gap-4">
-            <div>
-              <label class="block text-gray-300 mb-2 text-sm md:text-base">Вес от (кг)</label>
-              <input 
-                v-model.number="filters.weight_min"
-                @change="fetchOrders"
-                type="number" 
-                placeholder="1000"
-                class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-              />
-            </div>
-            <div>
-              <label class="block text-gray-300 mb-2 text-sm md:text-base">Вес до (кг)</label>
-              <input 
-                v-model.number="filters.weight_max"
-                @change="fetchOrders"
-                type="number" 
-                placeholder="20000"
-                class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-              />
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3 md:gap-4">
-            <div>
-              <label class="block text-gray-300 mb-2 text-sm md:text-base">Цена от (BYN)</label>
-              <input 
-                v-model.number="filters.price_min"
-                @change="fetchOrders"
-                type="number" 
-                placeholder="100"
-                class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-              />
-            </div>
-            <div>
-              <label class="block text-gray-300 mb-2 text-sm md:text-base">Цена до (BYN)</label>
-              <input 
-                v-model.number="filters.price_max"
-                @change="fetchOrders"
-                type="number" 
-                placeholder="5000"
-                class="w-full px-4 py-2 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Активные фильтры -->
-    <div v-if="activeFiltersCount > 0" class="flex flex-wrap gap-2 mb-4 md:mb-6">
-      <span class="text-gray-300 text-xs md:text-sm">Активные фильтры:</span>
-      <span 
-        v-for="filter in activeFiltersList" 
-        :key="filter.key"
-        class="inline-flex items-center gap-1 px-2 py-1 md:px-3 md:py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs md:text-sm"
-      >
-        {{ filter.label }}
-        <button @click="removeFilter(filter.key)" class="hover:text-white">×</button>
-      </span>
-      <button @click="resetFilters" class="text-red-400 hover:text-red-300 text-xs md:text-sm ml-2">
-        Сбросить всё
-      </button>
-    </div>
-
-    <!-- Список заказов -->
-    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-      <div v-for="i in 6" :key="i" class="bg-white/10 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-white/20 animate-pulse">
-        <div class="h-5 md:h-6 bg-white/20 rounded mb-3 md:mb-4 w-3/4"></div>
-        <div class="h-3 md:h-4 bg-white/10 rounded mb-2"></div>
-        <div class="h-3 md:h-4 bg-white/10 rounded mb-3 md:mb-4"></div>
-        <div class="h-6 md:h-8 bg-white/20 rounded w-1/2"></div>
-      </div>
-    </div>
-
-    <div v-else-if="orders.length === 0" class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 md:p-12 border border-white/20 text-center">
-      <svg class="w-16 h-16 md:w-20 md:h-20 text-gray-500 mx-auto mb-3 md:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-      <p class="text-gray-400 text-base md:text-lg mb-4">Нет заказов по заданным фильтрам</p>
-      <button 
-        @click="resetFilters"
-        class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 md:px-6 md:py-3 rounded-lg transition-colors text-sm md:text-base"
-      >
-        Сбросить фильтры
-      </button>
-    </div>
-
-    <div v-else>
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6">
-        <router-link 
-          v-for="order in orders" 
-          :key="order.id"
-          :to="`/orders/${order.id}`"
-          class="bg-white/10 backdrop-blur-lg rounded-xl p-4 md:p-6 border border-white/20 hover:bg-white/15 transition-colors block"
-        >
-          <div class="flex items-start justify-between mb-3 md:mb-4">
-            <h3 class="text-sm md:text-lg font-semibold text-white flex-1 line-clamp-2">
-              {{ order.pickup_address }} → {{ order.delivery_address }}
-            </h3>
-            <span 
-              :class="[
-                'px-2 py-1 rounded-full text-xs font-semibold ml-2 whitespace-nowrap',
-                order.status === 'active' ? 'bg-green-500/20 text-green-300' :
-                order.status === 'in_progress' ? 'bg-blue-500/20 text-blue-300' :
-                'bg-gray-500/20 text-gray-300'
-              ]"
-            >
-              {{ getStatusText(order.status) }}
-            </span>
-          </div>
-          
-          <div class="text-gray-300 text-xs md:text-sm space-y-1 md:space-y-2 mb-3 md:mb-4">
-            <div class="flex justify-between">
-              <span>Вес:</span>
-              <span class="font-semibold">{{ formatNumber(order.weight_kg) }} кг</span>
-            </div>
-            <div v-if="order.truck_type" class="flex justify-between">
-              <span>Тип кузова:</span>
-              <span class="font-semibold text-xs md:text-sm">{{ getTruckTypeText(order.truck_type) }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Дата:</span>
-              <span class="font-semibold text-xs md:text-sm">{{ formatDate(order.loading_date) || 'договорная' }}</span>
-            </div>
-          </div>
-          
-          <div class="text-xl md:text-2xl font-bold text-blue-400">
-            {{ formatNumber(order.price) }} {{ order.currency || 'BYN' }}
-          </div>
-
-          <button 
-            v-if="authStore.isCarrier && order.status === 'active' && order.shipper_id !== authStore.user?.id"
-            @click.stop="acceptOrder(order.id)"
-            :disabled="acceptingOrderId === order.id"
-            class="mt-3 md:mt-4 w-full bg-green-500/20 hover:bg-green-500/30 text-green-300 px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors text-xs md:text-sm font-semibold disabled:opacity-50"
-          >
-            {{ acceptingOrderId === order.id ? 'Принятие...' : 'Принять заказ' }}
-          </button>
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-lg border-b border-white/10">
+      <div class="container mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
+        <router-link to="/" class="text-xl md:text-2xl font-bold text-blue-400 hover:text-blue-300 transition-colors">
+          Перевозки.Бел
         </router-link>
-      </div>
-      
-      <!-- Пагинация -->
-      <div v-if="totalPages > 1" class="flex flex-col items-center gap-4 mt-6 md:mt-8">
-        <div class="flex justify-center items-center gap-2 md:gap-4">
+        
+        <!-- Мобильное меню -->
+        <div class="relative">
           <button 
-            @click="changePage(currentPage - 1)"
-            :disabled="currentPage === 1"
-            class="px-3 py-1.5 md:px-4 md:py-2 bg-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 transition-colors text-sm md:text-base"
+            @click="mobileMenuOpen = !mobileMenuOpen"
+            class="md:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
-            ←
+            <svg v-if="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
           
-          <div class="flex gap-1 md:gap-2">
-            <button 
-              v-for="page in displayedPages"
-              :key="page"
-              @click="changePage(page)"
-              :class="[
-                'px-2 py-1 md:px-4 md:py-2 rounded-lg transition-colors text-sm md:text-base',
-                page === currentPage 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-white/10 text-white hover:bg-white/20'
-              ]"
+          <!-- Десктопная навигация -->
+          <nav class="hidden md:flex items-center gap-6">
+            <router-link 
+              to="/orders" 
+              class="text-white hover:text-blue-400 transition-colors"
             >
-              {{ page }}
+              Заказы
+            </router-link>
+            <router-link 
+              to="/trucks" 
+              class="text-white hover:text-blue-400 transition-colors"
+            >
+              Транспорт
+            </router-link>
+            
+            <template v-if="authStore.isAuthenticated">
+              <div class="relative group">
+                <button class="text-white hover:text-blue-400 transition-colors flex items-center gap-2">
+                  <span>{{ authStore.user?.company_name || 'Профиль' }}</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                <div class="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-lg rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  <router-link 
+                    :to="authStore.isCarrier ? '/profile/transporter/orders' : '/profile'"
+                    class="block px-4 py-2 text-gray-800 hover:bg-blue-50"
+                  >
+                    Личный кабинет
+                  </router-link>
+                  <router-link 
+                    v-if="authStore.isAdmin"
+                    to="/admin"
+                    class="block px-4 py-2 text-gray-800 hover:bg-blue-50"
+                  >
+                    Админ-панель
+                  </router-link>
+                  <button 
+                    @click="handleLogout"
+                    class="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-50"
+                  >
+                    Выйти
+                  </button>
+                </div>
+              </div>
+            </template>
+            
+            <template v-else>
+              <router-link 
+                to="/auth/login" 
+                class="text-white hover:text-blue-400 transition-colors"
+              >
+                Войти
+              </router-link>
+              <router-link 
+                to="/auth/register" 
+                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Регистрация
+              </router-link>
+            </template>
+          </nav>
+        </div>
+      </div>
+      
+      <!-- Мобильное меню (выпадающее) -->
+      <div v-show="mobileMenuOpen" class="md:hidden bg-white/10 backdrop-blur-lg border-t border-white/10">
+        <div class="container mx-auto px-4 py-4 flex flex-col gap-3">
+          <router-link 
+            to="/orders" 
+            class="text-white hover:text-blue-400 transition-colors py-2"
+            @click="mobileMenuOpen = false"
+          >
+            Заказы
+          </router-link>
+          <router-link 
+            to="/trucks" 
+            class="text-white hover:text-blue-400 transition-colors py-2"
+            @click="mobileMenuOpen = false"
+          >
+            Транспорт
+          </router-link>
+          
+          <template v-if="authStore.isAuthenticated">
+            <router-link 
+              :to="authStore.isCarrier ? '/profile/transporter/orders' : '/profile'"
+              class="text-white hover:text-blue-400 transition-colors py-2"
+              @click="mobileMenuOpen = false"
+            >
+              Личный кабинет
+            </router-link>
+            <router-link 
+              v-if="authStore.isAdmin"
+              to="/admin"
+              class="text-white hover:text-blue-400 transition-colors py-2"
+              @click="mobileMenuOpen = false"
+            >
+              Админ-панель
+            </router-link>
+            <button 
+              @click="() => { handleLogout(); mobileMenuOpen = false }"
+              class="text-left text-white hover:text-blue-400 transition-colors py-2"
+            >
+              Выйти
             </button>
+          </template>
+          
+          <template v-else>
+            <router-link 
+              to="/auth/login" 
+              class="text-white hover:text-blue-400 transition-colors py-2"
+              @click="mobileMenuOpen = false"
+            >
+              Войти
+            </router-link>
+            <router-link 
+              to="/auth/register" 
+              class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-center"
+              @click="mobileMenuOpen = false"
+            >
+              Регистрация
+            </router-link>
+          </template>
+        </div>
+      </div>
+    </header>
+
+    <main class="pt-16 md:pt-20">
+      <slot />
+    </main>
+
+    <footer class="bg-white/5 border-t border-white/10 py-8 mt-16">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <h3 class="text-xl font-bold text-blue-400 mb-4">Перевозки.Бел</h3>
+            <p class="text-gray-300 text-sm">
+              Биржа грузоперевозок для прямого взаимодействия грузовладельцев и перевозчиков
+            </p>
           </div>
           
-          <button 
-            @click="changePage(currentPage + 1)"
-            :disabled="currentPage === totalPages"
-            class="px-3 py-1.5 md:px-4 md:py-2 bg-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 transition-colors text-sm md:text-base"
-          >
-            →
-          </button>
+          <div>
+            <h4 class="font-semibold text-white mb-4">Навигация</h4>
+            <ul class="space-y-2">
+              <li><router-link to="/orders" class="text-gray-300 hover:text-blue-400">Заказы</router-link></li>
+              <li><router-link to="/trucks" class="text-gray-300 hover:text-blue-400">Транспорт</router-link></li>
+              <li v-if="!authStore.isAuthenticated"><router-link to="/auth/register" class="text-gray-300 hover:text-blue-400">Регистрация</router-link></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 class="font-semibold text-white mb-4">Контакты</h4>
+            <ul class="space-y-2 text-gray-300 text-sm">
+              <li>Email: perevozki.bel@gmail.com</li>
+              <li>Тел: +375 (29) 228-04-38</li>
+              <li>Брест, Беларусь</li>
+            </ul>
+          </div>
         </div>
-        <div class="text-center text-gray-400 text-xs md:text-sm">
-          Показано {{ orders.length }} из {{ totalOrders }} заказов
+        
+        <div class="border-t border-white/10 mt-8 pt-8 text-center text-gray-400 text-sm">
+          © {{ new Date().getFullYear() }} Перевозки.Бел. Все права защищены.
         </div>
       </div>
-      
-      <div v-else class="text-center text-gray-400 text-xs md:text-sm mt-4">
-        Показано {{ orders.length }} из {{ totalOrders }} заказов
-      </div>
-    </div>
+    </footer>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useAppStore } from '@/stores/app'
-import apiClient from '@/api/client'
-import { ordersAPI } from '@/api/orders'
+import { useRouter } from 'vue-router'
 
-const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
-const appStore = useAppStore()
+const router = useRouter()
+const mobileMenuOpen = ref(false)
 
-const loading = ref(true)
-const orders = ref([])
-const showFilters = ref(false)
-const acceptingOrderId = ref(null)
-const currentPage = ref(1)
-const totalPages = ref(1)
-const totalOrders = ref(0)
-
-const filters = ref({
-  from: route.query.from || '',
-  to: route.query.to || '',
-  truck_type: route.query.truck_type || '',
-  weight_min: route.query.weight_min ? Number(route.query.weight_min) : null,
-  weight_max: route.query.weight_max ? Number(route.query.weight_max) : null,
-  price_min: route.query.price_min ? Number(route.query.price_min) : null,
-  price_max: route.query.price_max ? Number(route.query.price_max) : null
-})
-
-const displayedPages = computed(() => {
-  const delta = 2
-  const range = []
-  const rangeWithDots = []
-  let l
-
-  for (let i = 1; i <= totalPages.value; i++) {
-    if (i === 1 || i === totalPages.value || Math.abs(i - currentPage.value) <= delta) {
-      range.push(i)
-    }
-  }
-
-  range.forEach((i) => {
-    if (l) {
-      if (i - l === 2) {
-        rangeWithDots.push(l + 1)
-      } else if (i - l !== 1) {
-        rangeWithDots.push('...')
-      }
-    }
-    rangeWithDots.push(i)
-    l = i
-  })
-
-  return rangeWithDots
-})
-
-const activeFiltersCount = computed(() => {
-  let count = 0
-  if (filters.value.from) count++
-  if (filters.value.to) count++
-  if (filters.value.truck_type) count++
-  if (filters.value.weight_min) count++
-  if (filters.value.weight_max) count++
-  if (filters.value.price_min) count++
-  if (filters.value.price_max) count++
-  return count
-})
-
-const activeFiltersList = computed(() => {
-  const list = []
-  if (filters.value.from) list.push({ key: 'from', label: `Откуда: ${filters.value.from}` })
-  if (filters.value.to) list.push({ key: 'to', label: `Куда: ${filters.value.to}` })
-  if (filters.value.truck_type) list.push({ key: 'truck_type', label: `Тип: ${getTruckTypeText(filters.value.truck_type)}` })
-  if (filters.value.weight_min) list.push({ key: 'weight_min', label: `Вес от: ${filters.value.weight_min} кг` })
-  if (filters.value.weight_max) list.push({ key: 'weight_max', label: `Вес до: ${filters.value.weight_max} кг` })
-  if (filters.value.price_min) list.push({ key: 'price_min', label: `Цена от: ${filters.value.price_min} BYN` })
-  if (filters.value.price_max) list.push({ key: 'price_max', label: `Цена до: ${filters.value.price_max} BYN` })
-  return list
-})
-
-let searchTimeout = null
-
-const debounceSearch = () => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    currentPage.value = 1
-    fetchOrders()
-  }, 500)
+const handleLogout = async () => {
+  await authStore.logout()
+  router.push('/')
 }
-
-const removeFilter = (key) => {
-  filters.value[key] = ''
-  currentPage.value = 1
-  fetchOrders()
-}
-
-const changePage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-    fetchOrders()
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-}
-
-const fetchOrders = async () => {
-  loading.value = true
-  
-  try {
-    const params = { 
-      status: 'active', 
-      sort: 'latest', 
-      limit: 20,
-      page: currentPage.value
-    }
-    
-    Object.entries(filters.value).forEach(([key, val]) => {
-      if (val && val !== '') params[key] = val
-    })
-    
-    const response = await apiClient.get('/api/orders', { params })
-    
-    if (response.data.orders && Array.isArray(response.data.orders)) {
-      orders.value = response.data.orders
-      totalOrders.value = response.data.total || 0
-      totalPages.value = response.data.pages || 1
-      currentPage.value = response.data.page || 1
-    } else if (Array.isArray(response.data)) {
-      orders.value = response.data
-      totalOrders.value = orders.value.length
-      totalPages.value = 1
-    } else {
-      orders.value = []
-      totalOrders.value = 0
-      totalPages.value = 1
-    }
-    
-    const queryParams = {}
-    Object.entries(filters.value).forEach(([key, val]) => {
-      if (val && val !== '') queryParams[key] = val
-    })
-    if (currentPage.value > 1) queryParams.page = currentPage.value
-    router.replace({ query: queryParams })
-    
-  } catch (error) {
-    console.error('Failed to fetch orders:', error)
-    orders.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-const resetFilters = () => {
-  filters.value = {
-    from: '',
-    to: '',
-    truck_type: '',
-    weight_min: null,
-    weight_max: null,
-    price_min: null,
-    price_max: null
-  }
-  currentPage.value = 1
-  fetchOrders()
-}
-
-const acceptOrder = async (orderId) => {
-  if (!confirm('Вы уверены, что хотите принять этот заказ?')) return
-  
-  acceptingOrderId.value = orderId
-  
-  try {
-    await ordersAPI.acceptOrder(orderId)
-    appStore.addNotification({ type: 'success', message: 'Заказ принят!' })
-    await fetchOrders()
-  } catch (error) {
-    console.error('Failed to accept order:', error)
-    appStore.addNotification({ 
-      type: 'error', 
-      message: error.response?.data?.message || 'Не удалось принять заказ' 
-    })
-  } finally {
-    acceptingOrderId.value = null
-  }
-}
-
-const getStatusText = (status) => {
-  const statusMap = {
-    active: 'Активен',
-    in_progress: 'В работе',
-    completed: 'Выполнен',
-    canceled: 'Отменён'
-  }
-  return statusMap[status] || status
-}
-
-const getTruckTypeText = (type) => {
-  const typeMap = {
-    refrigerator: 'Рефрижератор',
-    tent: 'Тент',
-    flatbed: 'Платформа',
-    container: 'Контейнеровоз',
-    curtain: 'Штора',
-    isothermal: 'Изотермический'
-  }
-  return typeMap[type] || type
-}
-
-const formatNumber = (value) => {
-  if (!value) return '0'
-  return new Intl.NumberFormat('ru-RU').format(value)
-}
-
-const formatDate = (date) => {
-  if (!date) return null
-  const d = new Date(date)
-  if (isNaN(d.getTime())) return null
-  return d.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'short'
-  })
-}
-
-onMounted(() => {
-  if (route.query.page) {
-    currentPage.value = parseInt(route.query.page) || 1
-  }
-  fetchOrders()
-})
 </script>
