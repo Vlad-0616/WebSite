@@ -1,0 +1,14 @@
+<template>
+  <div class="min-h-screen flex items-center justify-center px-4 py-20">
+    <div class="text-center">
+      <h1 class="text-6xl font-bold text-white mb-4">404</h1>
+      <p class="text-xl text-gray-300 mb-8">Страница не найдена</p>
+      <router-link
+        to="/"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+      >
+        На главную
+      </router-link>
+    </div>
+  </div>
+</template>
